@@ -53,11 +53,14 @@ class GitRepo:
             last = child
 
     def updated(self, extra=''):
-        code_map = { 'C': 'changed', 'R': 'removed' }
+        code_map = { 'C': 'changed', 'R': 'removed', '?': 'unknown' }
 
-        pairs = [ k.split(' ') for k in self.git("ls-files -d -m -t %s" % extra) ]
-        ups = { 'changed': [], 'removed': [] }
+        pairs = [ k.split(' ') for k in self.git("ls-files -d -m -t -o %s" % extra) ]
+        ups = { 'changed': [], 'removed': [], 'unknown': [] }
         for (u, v) in pairs:
+            if u not in code_map:
+                continue
+
             u = code_map[u]
             ups[u].append(v)
 
@@ -146,12 +149,16 @@ if __name__ == '__main__':
     diff = repo.diff()
     dm = DiffMunger()
 
-    excluded = [ 'autocommit.sh' ]
+    excluded = [ 'autocommit.sh', 'filter-scm.py' ]
     included = [ 'manifest.xml' ]
 
-    removed = [ r for r in repo.updated()['removed'] if r in included or r not in excluded ]
+    updates = repo.updated()
+
+    removed = [ r for r in updates['removed'] if r in included or r not in excluded ]
     excluded.extend(removed)
     changed = [ c for c in dm.parse_diff(diff) if c in included or c not in excluded ]
+    newfiles = [ n for n in updates['unknown'] if n.endswith('.note') and '/' not in n ]
+    changed.extend(newfiles)
 
     # Non-trivial file changes
     for k in changed:
