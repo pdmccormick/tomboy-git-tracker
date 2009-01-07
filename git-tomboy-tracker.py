@@ -149,7 +149,7 @@ if __name__ == '__main__':
     diff = repo.diff()
     dm = DiffMunger()
 
-    excluded = [ 'autocommit.sh', 'filter-scm.py' ]
+    excluded = [ 'autocommit.sh', 'git-tomboy-tracker.py' ]
     included = [ 'manifest.xml' ]
 
     updates = repo.updated()
